@@ -1,15 +1,15 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace App\Enum;
 
-enum UserEnum: string
+enum UserRole: string
 {
-    case ADMIN = 'ADMIN';
+    case ADMIN   = 'ADMIN';
     case MANAGER = 'MANAGER';
     case FINANCE = 'FINANCE';
-    case USER = 'USER';
+    case USER    = 'USER';
 
     public static function values(): array
     {
