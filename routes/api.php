@@ -2,10 +2,11 @@
 
 declare(strict_types = 1);
 
+use App\Http\Controllers\Auth\Login;
 use Illuminate\Support\Facades\Route;
 
 Route::name('api.')->group(function () {
-    Route::post('login')->name('login');
+    Route::post('login', Login::class)->name('login');
     Route::post('purchases')->name('purchases.store');
 
     Route::middleware('auth:sanctum')->group(function () {
