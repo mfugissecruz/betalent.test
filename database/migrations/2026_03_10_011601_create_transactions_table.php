@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('client_id')->constrained('clients', 'id', 'transaction_client_id_index');
-            $table->foreignId('gateway_id')->constrained('gateways', 'id', 'transaction_gateway_id_index');
+            $table->foreignId('client_id')->constrained();
+            $table->foreignId('gateway_id')->constrained();
             $table->string('external_id')->nullable();
             $table->enum('status', ['pending', 'paid', 'failed', 'charged_back'])->default('pending');
             $table->integer('amount');
