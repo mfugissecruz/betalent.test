@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Schema;
 
-test('users table exits', fn () => expect(Schema::hasTable('users'))->toBeTrue());
+test('users migration exits', fn () => expect(Schema::hasTable('users'))->toBeTrue());
 
 test('users migration has required columns', function () {
     expect(Schema::hasColumns('users', [
