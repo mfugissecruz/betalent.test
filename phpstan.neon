@@ -1,0 +1,13 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+
+    paths:
+        - app/
+
+    excludePaths:
+        - app/Http/Controllers/Photographer/Stripe/Contest/Image/PurchaseMorePhotosController.php
+        - app/Http/Controllers/Photographer/Stripe/Contest/SubscriptionController.php
+
+    level: 5
