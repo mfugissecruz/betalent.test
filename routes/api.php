@@ -16,8 +16,9 @@ Route::name('api.')->group(function () {
             Route::get('{id}')->name('show');
         });
 
-        Route::prefix('gateways')->name('gateways.')->group(function () {
-            Route::patch('{id}')->name('toggle');
+        Route::prefix('gateways')->name('gateway.')->group(function () {
+            Route::patch('{id}/activate')->name('activate');
+            Route::patch('{id}/deactivate')->name('deactivate');
             Route::patch('{id}/priority')->name('priority');
         });
 
