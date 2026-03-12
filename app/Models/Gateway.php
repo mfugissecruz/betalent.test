@@ -4,8 +4,9 @@ declare(strict_types = 1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\{Builder, Model};
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $name
  * @property boolean $is_active
  * @property int $priority
+ * @method static \Illuminate\Database\Eloquent\Builder available()
  */
 class Gateway extends Model
 {
@@ -36,5 +38,11 @@ class Gateway extends Model
     public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class);
+    }
+
+    #[Scope]
+    protected function available(Builder $query): void
+    {
+        $query->where('is_active', '=', true);
     }
 }
