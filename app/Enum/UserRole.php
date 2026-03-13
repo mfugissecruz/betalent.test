@@ -15,4 +15,9 @@ enum UserRole: string
     {
         return array_column(self::cases(), 'value');
     }
+
+    public static function allows(self ...$roles): string
+    {
+        return 'role:' . implode(',', array_map(fn ($role) => $role->value, $roles));
+    }
 }

@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 use App\Enum\UserRole;
 use App\Http\Controllers\Auth\Login;
+use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\User\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -13,19 +14,19 @@ Route::name('api.')->group(function () {
 
     Route::middleware('auth:sanctum')->group(function () {
 
-        // Accessible by all authenticated roles
-        Route::prefix('clients')->name('clients.')->group(function () {
-            Route::get('/')->name('index');
-            Route::get('{id}')->name('show');
-        });
+        Route::apiResource('clients', UserController::class)
+            ->only(['index', 'show'])
+            ->names('clients.');
 
-        Route::prefix('transactions')->name('transactions.')->group(function () {
-            Route::get('/')->name('index');
-            Route::get('{id}')->name('show');
-        });
+        Route::apiResource('transactions', UserController::class)
+            ->only(['index', 'show'])
+            ->names('transactions.');
 
-        // ADMIN only
-        Route::middleware('role:' . UserRole::ADMIN->value)->group(function () {
+        Route::apiResource('users', UserController::class)
+            ->names('users.')
+            ->middleware(UserRole::allows(UserRole::ADMIN, UserRole::MANAGER));
+
+        Route::middleware(UserRole::allows(UserRole::ADMIN))->group(function () {
             Route::prefix('gateways')->name('gateway.')->group(function () {
                 Route::patch('{id}/activate')->name('activate');
                 Route::patch('{id}/deactivate')->name('deactivate');
@@ -33,23 +34,12 @@ Route::name('api.')->group(function () {
             });
         });
 
-        // ADMIN, MANAGER
-        Route::apiResource('users', UserController::class)
-            ->names('users')
-            ->middleware('role:' . UserRole::ADMIN->value . ',' . UserRole::MANAGER->value);
+        Route::get('products', [ProductController::class, 'index'])->name('products.index');
+        Route::get('products/{id}', [ProductController::class, 'show'])->name('products.show');
 
-        // ADMIN, MANAGER, FINANCE
-        Route::middleware('role:' . UserRole::ADMIN->value . ',' . UserRole::MANAGER->value . ',' . UserRole::FINANCE->value)->group(function () {
-            Route::prefix('products')->name('products.')->group(function () {
-                Route::get('/')->name('index');
-                Route::get('{id}')->name('show');
-                Route::post('/')->name('store');
-                Route::put('{id}')->name('update');
-                Route::delete('{id}')->name('destroy');
-            });
-
+        Route::middleware(UserRole::allows(UserRole::ADMIN, UserRole::MANAGER, UserRole::FINANCE))->group(function () {
+            Route::apiResource('products', ProductController::class)->names('products.')->except(['index', 'show']);
             Route::post('transactions/{id}/refund')->name('transactions.refund');
         });
-
     });
 });
