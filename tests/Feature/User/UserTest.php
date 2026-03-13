@@ -19,6 +19,21 @@ test('admin can list users', function () {
         ->assertJsonCount(4, 'data');
 });
 
+test('users list response is paginated', function () {
+    $admin = UserFactory::new()->create(['role' => UserRole::ADMIN->value]);
+    UserFactory::new()->count(3)->create();
+
+    actingAs($admin);
+
+    getJson('/api/users')
+        ->assertSuccessful()
+        ->assertJsonStructure([
+            'data',
+            'links' => ['first', 'last', 'prev', 'next'],
+            'meta'  => ['current_page', 'per_page', 'total'],
+        ]);
+});
+
 test('manager can list users', function () {
     $manager = UserFactory::new()->create(['role' => UserRole::MANAGER->value]);
     UserFactory::new()->count(2)->create();

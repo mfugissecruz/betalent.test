@@ -17,7 +17,7 @@ class UserController extends Controller
 {
     public function index(): AnonymousResourceCollection
     {
-        return UserResource::collection(User::all());
+        return UserResource::collection(User::paginate());
     }
 
     public function show(User $user): UserResource
