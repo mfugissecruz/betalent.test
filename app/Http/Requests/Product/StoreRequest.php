@@ -25,7 +25,7 @@ class StoreRequest extends FormRequest
     {
         return [
             'name'   => ['required', 'string', 'max:255'],
-            'amount' => ['required', 'integer'],
+            'amount' => ['required'],
         ];
     }
 }

@@ -23,17 +23,21 @@ class Product extends Model
         'amount',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'amount' => 'integer',
-        ];
-    }
-
     public function transactions(): BelongsToMany
     {
         return $this->belongsToMany(Transaction::class)
             ->withPivot('quantity')
             ->using(TransactionProduct::class);
+    }
+
+    public static function booted(): void
+    {
+        static::creating(function (Product $product) {
+            $product->amount = $product->amount * 100;
+        });
+
+        static::updating(function (Product $product) {
+            $product->amount = $product->amount * 100;
+        });
     }
 }
