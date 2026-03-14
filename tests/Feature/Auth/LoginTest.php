@@ -7,7 +7,7 @@ use Database\Factories\UserFactory;
 
 use function Pest\Laravel\postJson;
 
-test('user should be able to login with valid credentials', function () {
+test('successfull login with valid credentials', function () {
     $user = UserFactory::new()->create(['role' => UserRole::ADMIN->value]);
 
     postJson('/api/login', [
@@ -16,7 +16,7 @@ test('user should be able to login with valid credentials', function () {
     ])->assertSuccessful();
 });
 
-test('user should receive a token after successful login', function () {
+test('login returns token with valid credentials', function () {
     $user = UserFactory::new()->create(['role' => UserRole::ADMIN->value]);
 
     postJson('/api/login', [
@@ -27,7 +27,7 @@ test('user should receive a token after successful login', function () {
     ]);
 });
 
-test('user cannot login with wrong password', function () {
+test('login fails with wrong password', function () {
     $user = UserFactory::new()->create(['role' => UserRole::ADMIN->value]);
 
     postJson('/api/login', [
@@ -36,14 +36,14 @@ test('user cannot login with wrong password', function () {
     ])->assertUnauthorized();
 });
 
-test('user cannot login with unregistered email', function () {
+test('login fails with unregistered email', function () {
     postJson('/api/login', [
         'email'    => 'unregistered@example.com',
         'password' => 'password',
     ])->assertUnauthorized();
 });
 
-test('user should receive 429 after too many failed login attempts', function () {
+test('login is rate limited after 5 attempts', function () {
     $payload = [
         'email'    => 'unregistered@example.com',
         'password' => 'wrong-password',
