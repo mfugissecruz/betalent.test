@@ -38,7 +38,7 @@ Route::name('api.')->group(function () {
         });
 
         Route::get('products', [ProductController::class, 'index'])->name('products.index');
-        Route::get('products/{id}', [ProductController::class, 'show'])->name('products.show');
+        Route::get('products/{product}', [ProductController::class, 'show'])->name('products.show');
 
         Route::middleware(UserRole::allows(UserRole::ADMIN, UserRole::MANAGER, UserRole::FINANCE))->group(function () {
             Route::apiResource('products', ProductController::class)->names('products')->except(['index', 'show']);

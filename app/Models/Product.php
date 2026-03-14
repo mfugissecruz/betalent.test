@@ -23,6 +23,19 @@ class Product extends Model
         'amount',
     ];
 
+    public static function booted(): void
+    {
+        static::creating(function (Product $product) {
+            $product->amount = (int) round($product->amount * 100);
+        });
+
+        static::updating(function (Product $product) {
+            if ($product->isDirty('amount')) {
+                $product->amount = (int) round($product->amount * 100);
+            }
+        });
+    }
+
     public function transactions(): BelongsToMany
     {
         return $this->belongsToMany(Transaction::class)
@@ -30,14 +43,4 @@ class Product extends Model
             ->using(TransactionProduct::class);
     }
 
-    public static function booted(): void
-    {
-        static::creating(function (Product $product) {
-            $product->amount = $product->amount * 100;
-        });
-
-        static::updating(function (Product $product) {
-            $product->amount = $product->amount * 100;
-        });
-    }
 }

@@ -13,11 +13,10 @@ test('admin can activate a gateway', function () {
 
     actingAs($user);
 
-    patchJson(route('api.gateway.activate', ['gateway' => $gateway->id]), [
-        'is_active' => true,
-    ])->assertSuccessful();
+    patchJson(route('api.gateway.activate', ['gateway' => $gateway->id]))
+        ->assertSuccessful();
 
-    assertDatabaseHas('gateways', ['is_active' => true]);
+    assertDatabaseHas('gateways', ['id' => $gateway->id, 'is_active' => true]);
 });
 
 test('admin can deactivate a gateway', function () {
@@ -26,11 +25,10 @@ test('admin can deactivate a gateway', function () {
 
     actingAs($user);
 
-    patchJson(route('api.gateway.deactivate', ['gateway' => $gateway->id]), [
-        'is_active' => false,
-    ])->assertSuccessful();
+    patchJson(route('api.gateway.deactivate', ['gateway' => $gateway->id]))
+        ->assertSuccessful();
 
-    assertDatabaseHas('gateways', ['is_active' => false]);
+    assertDatabaseHas('gateways', ['id' => $gateway->id, 'is_active' => false]);
 });
 
 test('admin can update gateway priority', function () {
@@ -43,7 +41,7 @@ test('admin can update gateway priority', function () {
         'priority' => 2,
     ])->assertSuccessful();
 
-    assertDatabaseHas('gateways', ['priority' => 2]);
+    assertDatabaseHas('gateways', ['id' => $gateway->id, 'priority' => 2]);
 });
 
 test('manager cannot activate a gateway', function () {
@@ -52,12 +50,10 @@ test('manager cannot activate a gateway', function () {
 
     actingAs($user);
 
-    patchJson(route('api.gateway.activate', ['gateway' => $gateway->id]), [
-        'is_active' => true,
-    ])->assertForbidden();
+    patchJson(route('api.gateway.activate', ['gateway' => $gateway->id]))
+        ->assertForbidden();
 
-    assertDatabaseHas('gateways', ['is_active' => false]);
-
+    assertDatabaseHas('gateways', ['id' => $gateway->id, 'is_active' => false]);
 });
 
 test('finance cannot activate a gateway', function () {
@@ -66,12 +62,10 @@ test('finance cannot activate a gateway', function () {
 
     actingAs($user);
 
-    patchJson(route('api.gateway.activate', ['gateway' => $gateway->id]), [
-        'is_active' => true,
-    ])->assertForbidden();
+    patchJson(route('api.gateway.activate', ['gateway' => $gateway->id]))
+        ->assertForbidden();
 
-    assertDatabaseHas('gateways', ['is_active' => false]);
-
+    assertDatabaseHas('gateways', ['id' => $gateway->id, 'is_active' => false]);
 });
 
 test('user cannot activate a gateway', function () {
@@ -80,10 +74,8 @@ test('user cannot activate a gateway', function () {
 
     actingAs($user);
 
-    patchJson(route('api.gateway.activate', ['gateway' => $gateway->id]), [
-        'is_active' => true,
-    ])->assertForbidden();
+    patchJson(route('api.gateway.activate', ['gateway' => $gateway->id]))
+        ->assertForbidden();
 
-    assertDatabaseHas('gateways', ['is_active' => false]);
-
+    assertDatabaseHas('gateways', ['id' => $gateway->id, 'is_active' => false]);
 });

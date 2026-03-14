@@ -1,0 +1,339 @@
+{
+    "info": {
+        "name": "BeTalent API",
+        "description": "Collection completa da API de gestão de pagamentos BeTalent.\n\n## Como usar\n\n1. Importe este arquivo no Postman (File → Import)\n2. Execute **Auth / Login** — o token é salvo automaticamente na variável **token**\n3. Todas as demais requisições já usam o token no header de autorização via herança da collection\n\n## Variáveis da collection\n\n| Variável | Valor padrão | Descrição |\n|---|---|---|\n| baseUrl | `http://localhost/api` | URL base da API |\n| token | _(vazio)_ | Preenchido automaticamente após o login |\n\n## Papéis disponíveis\n\n`ADMIN` · `MANAGER` · `FINANCE` · `USER`\n\nO usuário padrão criado pelo seeder (`contact@marcelocruz.dev`) tem papel `ADMIN` e acesso total.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            { "key": "token", "value": "{{token}}", "type": "string" }
+        ]
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost/api"
+        },
+        {
+            "key": "token",
+            "value": ""
+        }
+    ],
+    "item": [
+        {
+            "name": "Auth",
+            "description": "Autenticação de usuários. O token retornado deve ser usado em todas as rotas protegidas.",
+            "item": [
+                {
+                    "name": "Login",
+                    "description": "Autentica o usuário e retorna um Bearer token. Após a resposta, o script de teste salva o token na variável **token** automaticamente — não é necessário copiar e colar manualmente.",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "const json = pm.response.json();",
+                                    "if (json.token) {",
+                                    "    pm.collectionVariables.set('token', json.token);",
+                                    "    console.log('Token salvo:', json.token);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": { "type": "noauth" },
+                        "method": "POST",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" },
+                            { "key": "Accept", "value": "application/json" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"contact@marcelocruz.dev\",\n    \"password\": \"password\"\n}"
+                        },
+                        "url": { "raw": "{{baseUrl}}/login", "host": ["{{baseUrl}}"], "path": ["login"] }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Purchase",
+            "description": "Rota pública para criação de compras. Não requer autenticação.",
+            "item": [
+                {
+                    "name": "Create Purchase",
+                    "description": "Processa uma compra com múltiplos produtos. O sistema busca ou cria o cliente pelo e-mail, calcula o valor total a partir dos produtos e quantidades, e tenta os gateways ativos em ordem de prioridade com fallback automático.\n\n**Campos do cartão:**\n- `number` — número completo do cartão\n- `cvv` — código de segurança\n- `expiry_date` — validade no formato `MM/YYYY`\n- `holder_name` — nome impresso no cartão\n\n**Produtos:** array de objetos com `id` e `quantity`. O `id` deve corresponder a um produto cadastrado.\n\n**CVVs especiais para simulação:**\n\n| CVV | Comportamento |\n|-----|---------------|\n| `100` | Gateway 1 recusa — fallback para Gateway 2 (se ativo) |\n| `300` | Gateway 2 recusa |\n| `200` | Ambos recusam → retorna 502 |",
+                    "request": {
+                        "auth": { "type": "noauth" },
+                        "method": "POST",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" },
+                            { "key": "Accept", "value": "application/json" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"client\": {\n        \"name\": \"João Silva\",\n        \"email\": \"joao@example.com\"\n    },\n    \"card\": {\n        \"number\": \"4111111111111111\",\n        \"cvv\": \"123\",\n        \"expiry_date\": \"12/2028\",\n        \"holder_name\": \"JOAO SILVA\"\n    },\n    \"products\": [\n        { \"id\": 1, \"quantity\": 2 }\n    ]\n}"
+                        },
+                        "url": { "raw": "{{baseUrl}}/purchase", "host": ["{{baseUrl}}"], "path": ["purchase"] }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Clients",
+            "description": "Consulta de clientes. Acessível por qualquer usuário autenticado (todos os papéis). Clientes são criados automaticamente pelo endpoint de compra — não há rota de criação direta.",
+            "item": [
+                {
+                    "name": "List Clients",
+                    "description": "Retorna a lista paginada de todos os clientes cadastrados.",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Accept", "value": "application/json" }
+                        ],
+                        "url": { "raw": "{{baseUrl}}/clients", "host": ["{{baseUrl}}"], "path": ["clients"] }
+                    }
+                },
+                {
+                    "name": "Show Client",
+                    "description": "Retorna os dados de um cliente específico com o histórico completo de transações, incluindo os produtos e o gateway utilizado em cada compra.",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Accept", "value": "application/json" }
+                        ],
+                        "url": { "raw": "{{baseUrl}}/clients/1", "host": ["{{baseUrl}}"], "path": ["clients", "1"] }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Transactions",
+            "description": "Consulta e estorno de transações. Listagem e detalhe acessíveis por qualquer usuário autenticado. Estorno restrito a **ADMIN** e **FINANCE**.",
+            "item": [
+                {
+                    "name": "List Transactions",
+                    "description": "Retorna todas as transações com dados do cliente, gateway e produtos associados.",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Accept", "value": "application/json" }
+                        ],
+                        "url": { "raw": "{{baseUrl}}/transactions", "host": ["{{baseUrl}}"], "path": ["transactions"] }
+                    }
+                },
+                {
+                    "name": "Show Transaction",
+                    "description": "Retorna os detalhes completos de uma transação específica.",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Accept", "value": "application/json" }
+                        ],
+                        "url": { "raw": "{{baseUrl}}/transactions/1", "host": ["{{baseUrl}}"], "path": ["transactions", "1"] }
+                    }
+                },
+                {
+                    "name": "Refund Transaction",
+                    "description": "Solicita o estorno de uma transação ao gateway que a processou originalmente e atualiza o status para `charged_back`. Retorna erro se a transação já foi estornada anteriormente.\n\n**Papéis permitidos:** ADMIN, FINANCE.",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Accept", "value": "application/json" }
+                        ],
+                        "url": { "raw": "{{baseUrl}}/transactions/1/refund", "host": ["{{baseUrl}}"], "path": ["transactions", "1", "refund"] }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Users",
+            "description": "Gerenciamento de usuários. CRUD completo restrito a **ADMIN** e **MANAGER**.",
+            "item": [
+                {
+                    "name": "List Users",
+                    "description": "Retorna a lista paginada de usuários cadastrados.",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Accept", "value": "application/json" }
+                        ],
+                        "url": { "raw": "{{baseUrl}}/users", "host": ["{{baseUrl}}"], "path": ["users"] }
+                    }
+                },
+                {
+                    "name": "Show User",
+                    "description": "Retorna os dados de um usuário específico.",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Accept", "value": "application/json" }
+                        ],
+                        "url": { "raw": "{{baseUrl}}/users/1", "host": ["{{baseUrl}}"], "path": ["users", "1"] }
+                    }
+                },
+                {
+                    "name": "Create User",
+                    "description": "Cria um novo usuário. O campo `role` aceita: `ADMIN`, `MANAGER`, `FINANCE` ou `USER`.",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" },
+                            { "key": "Accept", "value": "application/json" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Ana Lima\",\n    \"email\": \"ana@example.com\",\n    \"password\": \"secret123\",\n    \"role\": \"FINANCE\"\n}"
+                        },
+                        "url": { "raw": "{{baseUrl}}/users", "host": ["{{baseUrl}}"], "path": ["users"] }
+                    }
+                },
+                {
+                    "name": "Update User",
+                    "description": "Atualiza os dados de um usuário. Todos os campos são opcionais — envie apenas o que deseja alterar. Se `password` for informado, será armazenado com hash.",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" },
+                            { "key": "Accept", "value": "application/json" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Ana Lima Souza\"\n}"
+                        },
+                        "url": { "raw": "{{baseUrl}}/users/2", "host": ["{{baseUrl}}"], "path": ["users", "2"] }
+                    }
+                },
+                {
+                    "name": "Delete User",
+                    "description": "Remove permanentemente um usuário. Retorna status 204 sem corpo.",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            { "key": "Accept", "value": "application/json" }
+                        ],
+                        "url": { "raw": "{{baseUrl}}/users/2", "host": ["{{baseUrl}}"], "path": ["users", "2"] }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Products",
+            "description": "Gerenciamento de produtos. Listagem e detalhe acessíveis por qualquer autenticado. Criação, edição e exclusão restritas a **ADMIN**, **MANAGER** e **FINANCE**.",
+            "item": [
+                {
+                    "name": "List Products",
+                    "description": "Retorna a lista paginada de produtos disponíveis.",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Accept", "value": "application/json" }
+                        ],
+                        "url": { "raw": "{{baseUrl}}/products", "host": ["{{baseUrl}}"], "path": ["products"] }
+                    }
+                },
+                {
+                    "name": "Show Product",
+                    "description": "Retorna os dados de um produto específico.",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Accept", "value": "application/json" }
+                        ],
+                        "url": { "raw": "{{baseUrl}}/products/1", "host": ["{{baseUrl}}"], "path": ["products", "1"] }
+                    }
+                },
+                {
+                    "name": "Create Product",
+                    "description": "Cadastra um novo produto.",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" },
+                            { "key": "Accept", "value": "application/json" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Produto A\",\n    \"amount\": 60\n}"
+                        },
+                        "url": { "raw": "{{baseUrl}}/products", "host": ["{{baseUrl}}"], "path": ["products"] }
+                    }
+                },
+                {
+                    "name": "Update Product",
+                    "description": "Atualiza os dados de um produto. Todos os campos são opcionais.",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" },
+                            { "key": "Accept", "value": "application/json" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Produto A Atualizado\",\n    \"amount\": 80\n}"
+                        },
+                        "url": { "raw": "{{baseUrl}}/products/1", "host": ["{{baseUrl}}"], "path": ["products", "1"] }
+                    }
+                },
+                {
+                    "name": "Delete Product",
+                    "description": "Remove permanentemente um produto. Retorna status 204 sem corpo.",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            { "key": "Accept", "value": "application/json" }
+                        ],
+                        "url": { "raw": "{{baseUrl}}/products/1", "host": ["{{baseUrl}}"], "path": ["products", "1"] }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Gateways",
+            "description": "Gerenciamento dos gateways de pagamento. Restrito a **ADMIN**.\n\nO sistema possui dois gateways. O seeder configura o gateway 1 como ativo (prioridade 1) e o gateway 2 como inativo (prioridade 2). A compra sempre tenta o gateway de menor prioridade primeiro.",
+            "item": [
+                {
+                    "name": "Activate Gateway",
+                    "description": "Ativa um gateway para que seja considerado no fluxo de compras.",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            { "key": "Accept", "value": "application/json" }
+                        ],
+                        "url": { "raw": "{{baseUrl}}/gateways/2/activate", "host": ["{{baseUrl}}"], "path": ["gateways", "2", "activate"] }
+                    }
+                },
+                {
+                    "name": "Deactivate Gateway",
+                    "description": "Desativa um gateway, removendo-o do fluxo de compras e fallback.",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            { "key": "Accept", "value": "application/json" }
+                        ],
+                        "url": { "raw": "{{baseUrl}}/gateways/1/deactivate", "host": ["{{baseUrl}}"], "path": ["gateways", "1", "deactivate"] }
+                    }
+                },
+                {
+                    "name": "Update Gateway Priority",
+                    "description": "Atualiza a prioridade de um gateway. Valores menores têm precedência — o sistema tenta primeiro o gateway com menor número de prioridade.",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" },
+                            { "key": "Accept", "value": "application/json" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"priority\": 1\n}"
+                        },
+                        "url": { "raw": "{{baseUrl}}/gateways/1/priority", "host": ["{{baseUrl}}"], "path": ["gateways", "1", "priority"] }
+                    }
+                }
+            ]
+        }
+    ]
+}

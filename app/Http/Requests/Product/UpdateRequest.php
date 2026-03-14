@@ -25,7 +25,7 @@ class UpdateRequest extends FormRequest
     {
         return [
             'name'   => ['sometimes', 'string', 'max:255'],
-            'amount' => ['required'],
+            'amount' => ['sometimes', 'numeric', 'min:0.01'],
         ];
     }
 }

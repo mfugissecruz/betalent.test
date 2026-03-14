@@ -27,7 +27,13 @@ function fakeGateway1Success(): void
 {
     Http::fake([
         'http://gateway1.test/login'        => Http::response(['token' => 'fake-token']),
-        'http://gateway1.test/transactions' => Http::response(['id' => 'gw1-ext-id', 'status' => 'paid'], 201),
+        'http://gateway1.test/transactions' => function (\Illuminate\Http\Client\Request $request) {
+            if ($request->method() === 'POST') {
+                return Http::response(['id' => 'gw1-ext-id'], 201);
+            }
+
+            return Http::response(['data' => [['id' => 'gw1-ext-id', 'status' => 'paid']]], 200);
+        },
     ]);
 }
 
@@ -36,7 +42,13 @@ function fakeGateway1FailGateway2Success(): void
     Http::fake([
         'http://gateway1.test/login'        => Http::response(['token' => 'fake-token']),
         'http://gateway1.test/transactions' => Http::response([], 500),
-        'http://gateway2.test/transacoes'   => Http::response(['id' => 'gw2-ext-id', 'status' => 'paid'], 201),
+        'http://gateway2.test/transacoes'   => function (\Illuminate\Http\Client\Request $request) {
+            if ($request->method() === 'POST') {
+                return Http::response(['id' => 'gw2-ext-id'], 201);
+            }
+
+            return Http::response(['data' => [['id' => 'gw2-ext-id', 'status' => 'paid']]], 200);
+        },
     ]);
 }
 

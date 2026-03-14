@@ -35,7 +35,25 @@ class Gateway1Service implements GatewayInterface
             throw GatewayException::chargeFailed('gateway_1');
         }
 
-        return $response->json();
+        $id = $response->json('id');
+
+        return $this->findTransaction($id);
+    }
+
+    private function findTransaction(string $id): array
+    {
+        $response = Http::withToken($this->token)
+            ->acceptJson()
+            ->baseUrl($this->endpoint)
+            ->get('transactions');
+
+        $transaction = collect($response->json('data'))->firstWhere('id', $id);
+
+        if (!$transaction) {
+            throw GatewayException::chargeFailed('gateway_1');
+        }
+
+        return $transaction;
     }
 
     public function refund(string $transactionId): array

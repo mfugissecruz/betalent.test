@@ -32,13 +32,40 @@ class Gateway2Service implements GatewayInterface
         ])
             ->acceptJson()
             ->baseUrl($this->endpoint)
-            ->post('transacoes', $payload);
+            ->post('transacoes', [
+                'valor'        => $payload['amount'],
+                'nome'         => $payload['name'],
+                'email'        => $payload['email'],
+                'numeroCartao' => $payload['cardNumber'],
+                'cvv'          => $payload['cvv'],
+            ]);
 
-        if ($response->failed()) {
+        if ($response->failed() || $response->json('erros')) {
             throw GatewayException::chargeFailed('gateway_2');
         }
 
-        return $response->json();
+        $id = $response->json('id');
+
+        return $this->findTransaction($id);
+    }
+
+    private function findTransaction(string $id): array
+    {
+        $response = Http::withHeaders([
+            'Gateway-Auth-Token'  => $this->token,
+            'Gateway-Auth-Secret' => $this->secret,
+        ])
+            ->acceptJson()
+            ->baseUrl($this->endpoint)
+            ->get('transacoes');
+
+        $transaction = collect($response->json('data'))->firstWhere('id', $id);
+
+        if (!$transaction) {
+            throw GatewayException::chargeFailed('gateway_2');
+        }
+
+        return $transaction;
     }
 
     public function refund(string $transactionId): array

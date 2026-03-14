@@ -4,36 +4,30 @@ declare(strict_types = 1);
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\GatewayPriority\{UpdatePriorityRequest, UpdateStatusRequest};
+use App\Http\Requests\GatewayPriority\UpdatePriorityRequest;
+use App\Http\Resources\GatewayResource;
 use App\Models\Gateway;
-use Illuminate\Http\JsonResponse;
 
 class GatewayController extends Controller
 {
-    public function activate(UpdateStatusRequest $request, Gateway $gateway): JsonResponse
+    public function activate(Gateway $gateway): GatewayResource
     {
-        $request->validated();
-
         $gateway->update(['is_active' => true]);
 
-        return response()->json(['message' => 'Gateway  successfully']);
+        return GatewayResource::make($gateway);
     }
 
-    public function deactivate(UpdateStatusRequest $request, Gateway $gateway): JsonResponse
+    public function deactivate(Gateway $gateway): GatewayResource
     {
-        $request->validated();
-
         $gateway->update(['is_active' => false]);
 
-        return response()->json(['message' => 'Gateway status updated successfully']);
+        return GatewayResource::make($gateway);
     }
 
-    public function updatePriority(UpdatePriorityRequest $request, Gateway $gateway): JsonResponse
+    public function updatePriority(UpdatePriorityRequest $request, Gateway $gateway): GatewayResource
     {
-        $data = $request->validated();
+        $gateway->update($request->validated());
 
-        $gateway->update(['priority' => $data['priority']]);
-
-        return response()->json(['message' => 'Gateway priority updated successfully']);
+        return GatewayResource::make($gateway);
     }
 }
