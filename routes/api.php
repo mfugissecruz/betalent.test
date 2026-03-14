@@ -4,8 +4,10 @@ declare(strict_types = 1);
 
 use App\Enum\UserRole;
 use App\Http\Controllers\Auth\Login;
+use App\Http\Controllers\Client\ClientController;
 use App\Http\Controllers\GatewayController;
 use App\Http\Controllers\Product\ProductController;
+use App\Http\Controllers\Transaction\TransactionController;
 use App\Http\Controllers\User\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,16 +17,16 @@ Route::name('api.')->group(function () {
 
     Route::middleware('auth:sanctum')->group(function () {
 
-        Route::apiResource('clients', UserController::class)
+        Route::apiResource('clients', ClientController::class)
             ->only(['index', 'show'])
-            ->names('clients.');
+            ->names('clients');
 
-        Route::apiResource('transactions', UserController::class)
+        Route::apiResource('transactions', TransactionController::class)
             ->only(['index', 'show'])
-            ->names('transactions.');
+            ->names('transactions');
 
         Route::apiResource('users', UserController::class)
-            ->names('users.')
+            ->names('users')
             ->middleware(UserRole::allows(UserRole::ADMIN, UserRole::MANAGER));
 
         Route::middleware(UserRole::allows(UserRole::ADMIN))->group(function () {
