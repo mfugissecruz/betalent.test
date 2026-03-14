@@ -5,7 +5,7 @@ declare(strict_types = 1);
 use App\Enum\UserRole;
 use App\Http\Controllers\Auth\Login;
 use App\Http\Controllers\Client\ClientController;
-use App\Http\Controllers\GatewayController;
+use App\Http\Controllers\{GatewayController, PurchaseController};
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Transaction\TransactionController;
 use App\Http\Controllers\User\UserController;
@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::name('api.')->group(function () {
     Route::post('login', Login::class)->name('login');
-    Route::post('purchases')->name('purchases.store');
+    Route::post('purchase', PurchaseController::class)->name('purchase.store');
 
     Route::middleware('auth:sanctum')->group(function () {
 
@@ -41,8 +41,8 @@ Route::name('api.')->group(function () {
         Route::get('products/{id}', [ProductController::class, 'show'])->name('products.show');
 
         Route::middleware(UserRole::allows(UserRole::ADMIN, UserRole::MANAGER, UserRole::FINANCE))->group(function () {
-            Route::apiResource('products', ProductController::class)->names('products.')->except(['index', 'show']);
-            Route::post('transactions/{id}/refund')->name('transactions.refund');
+            Route::apiResource('products', ProductController::class)->names('products')->except(['index', 'show']);
+            Route::post('transactions/{transaction}/refund')->name('transactions.refund');
         });
     });
 });

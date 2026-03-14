@@ -15,11 +15,16 @@ class GatewayManager
         'gateway_2' => Gateway2Service::class,
     ];
 
+    /**
+     * @return array{gateway: \App\Models\Gateway, response: array<string, mixed>}
+     */
     public function process(array $payload): array
     {
         foreach ($this->availableGateways() as $gateway) {
             try {
-                return $this->resolve($gateway->name)->charge($payload);
+                $response = $this->resolve($gateway->name)->charge($payload);
+
+                return ['gateway' => $gateway, 'response' => $response];
             } catch (GatewayException) {
                 continue;
             }
