@@ -5,7 +5,7 @@ declare(strict_types = 1);
 use App\Enum\UserRole;
 use App\Http\Controllers\Auth\Login;
 use App\Http\Controllers\Client\ClientController;
-use App\Http\Controllers\{GatewayController, PurchaseController};
+use App\Http\Controllers\{GatewayController, PurchaseController, RefundController};
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Transaction\TransactionController;
 use App\Http\Controllers\User\UserController;
@@ -42,7 +42,10 @@ Route::name('api.')->group(function () {
 
         Route::middleware(UserRole::allows(UserRole::ADMIN, UserRole::MANAGER, UserRole::FINANCE))->group(function () {
             Route::apiResource('products', ProductController::class)->names('products')->except(['index', 'show']);
-            Route::post('transactions/{transaction}/refund')->name('transactions.refund');
+        });
+
+        Route::middleware(UserRole::allows(UserRole::ADMIN, UserRole::FINANCE))->group(function () {
+            Route::post('transactions/{transaction}/refund', RefundController::class)->name('transactions.refund');
         });
     });
 });
