@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 use App\Enum\UserRole;
 use App\Http\Controllers\Auth\Login;
+use App\Http\Controllers\GatewayController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\User\UserController;
 use Illuminate\Support\Facades\Route;
@@ -28,9 +29,9 @@ Route::name('api.')->group(function () {
 
         Route::middleware(UserRole::allows(UserRole::ADMIN))->group(function () {
             Route::prefix('gateways')->name('gateway.')->group(function () {
-                Route::patch('{id}/activate')->name('activate');
-                Route::patch('{id}/deactivate')->name('deactivate');
-                Route::patch('{id}/priority')->name('priority');
+                Route::patch('{gateway}/activate', [GatewayController::class, 'activate'])->name('activate');
+                Route::patch('{gateway}/deactivate', [GatewayController::class, 'deactivate'])->name('deactivate');
+                Route::patch('{gateway}/priority', [GatewayController::class, 'updatePriority'])->name('priority');
             });
         });
 

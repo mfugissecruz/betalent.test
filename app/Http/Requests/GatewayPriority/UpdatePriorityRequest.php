@@ -6,7 +6,7 @@ namespace App\Http\Requests\GatewayPriority;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateRequest extends FormRequest
+class UpdatePriorityRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
